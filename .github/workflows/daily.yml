@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: "30 20 * * *"   # 毎日 5:30 JST（GitHubの遅延を見込んで6時前に開始）
   workflow_dispatch:         # Actions 画面から手動実行
+  push:
+    branches: [main]         # 改修を push したらすぐ反映
 
 permissions:
   contents: read
