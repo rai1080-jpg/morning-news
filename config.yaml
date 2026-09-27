@@ -1,0 +1,38 @@
+# 朝のニュース設定
+# ジャンルやフィードを追加・削除すると、翌朝から反映されます。
+
+# 読み上げ音声（edge-tts の音声名）
+#   ja-JP-NanamiNeural（女性） / ja-JP-KeitaNeural（男性）
+voice: ja-JP-NanamiNeural
+rate: "+10%"          # 読み上げ速度（例: "+0%", "+20%"）
+
+# 要約の最大文字数（目安）
+summary_chars: 120
+
+genres:
+  - name: 総合・国内
+    max_items: 6
+    max_age_hours: 36
+    feeds:
+      - { source: NHK, url: "https://www.nhk.or.jp/rss/news/cat0.xml" }
+      - { source: Yahoo!ニュース, url: "https://news.yahoo.co.jp/rss/topics/domestic.xml", fetch_page: true }
+      - { source: NHK, url: "https://www.nhk.or.jp/rss/news/cat1.xml" }
+      - { source: NHK, url: "https://www.nhk.or.jp/rss/news/cat4.xml" }
+
+  - name: IT・科学
+    max_items: 6
+    max_age_hours: 48
+    feeds:
+      - { source: Yahoo!ニュース, url: "https://news.yahoo.co.jp/rss/topics/it.xml", fetch_page: true }
+      - { source: ITmedia NEWS, url: "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml" }
+      - { source: NHK, url: "https://www.nhk.or.jp/rss/news/cat3.xml" }
+      - { source: Yahoo!ニュース, url: "https://news.yahoo.co.jp/rss/topics/science.xml", fetch_page: true }
+
+  - name: コールセンター
+    max_items: 5
+    max_age_hours: 72
+    # Googleニュース検索で主要サイトを横断。タイトルにいずれかの語を含む記事だけ残す
+    title_keywords: [コールセンター, コンタクトセンター, カスタマーサポート, 問い合わせ窓口]
+    exclude_domains: [lg.jp, go.jp]
+    feeds:
+      - { source: Googleニュース, url: "https://news.google.com/rss/search?q=%E3%82%B3%E3%83%BC%E3%83%AB%E3%82%BB%E3%83%B3%E3%82%BF%E3%83%BC+OR+%E3%82%B3%E3%83%B3%E3%82%BF%E3%82%AF%E3%83%88%E3%82%BB%E3%83%B3%E3%82%BF%E3%83%BC+when:3d&hl=ja&gl=JP&ceid=JP:ja" }

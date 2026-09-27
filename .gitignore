@@ -1,0 +1,5 @@
+# 生成物（GitHub Actions が毎朝作り直してPagesへ直接デプロイする）
+docs/data/
+docs/audio/
+__pycache__/
+.venv/

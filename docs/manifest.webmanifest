@@ -1,0 +1,10 @@
+{
+  "name": "朝のニュース",
+  "short_name": "朝ニュース",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f3ee",
+  "theme_color": "#d9622b",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
