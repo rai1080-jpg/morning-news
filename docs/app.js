@@ -134,7 +134,7 @@ function setupMediaSession(data) {
   if (!("mediaSession" in navigator)) return;
   navigator.mediaSession.metadata = new MediaMetadata({
     title: `朝のニュース ${data.date_label}`, artist: "朝のニュース", album: "",
-    artwork: [{ src: "icon.svg", sizes: "any", type: "image/svg+xml" }],
+    artwork: [{ src: "icons/icon-512.png", sizes: "512x512", type: "image/png" }],
   });
   navigator.mediaSession.setActionHandler("play", () => audio.play());
   navigator.mediaSession.setActionHandler("pause", () => audio.pause());
