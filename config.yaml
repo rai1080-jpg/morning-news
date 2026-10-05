@@ -11,7 +11,7 @@
 # 読み上げ音声（edge-tts の音声名）
 #   ja-JP-NanamiNeural（女性） / ja-JP-KeitaNeural（男性）
 voice: ja-JP-NanamiNeural
-rate: "+10%"          # 読み上げ速度（例: "+0%", "+20%"）
+rate: "+0%"           # 読み上げ速度（例: "+0%", "+10%"）。速すぎると不自然になるので標準に。アプリの速度ボタンでも変えられる
 
 # この時間より古い記事は、どのジャンルでも読まない（48時間＝2日）
 max_age_hours: 48

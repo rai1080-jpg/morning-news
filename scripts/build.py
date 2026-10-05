@@ -24,6 +24,12 @@ JST = timezone(timedelta(hours=9))
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36"
 # edge-tts の既定出力は 48kbps の MP3 なので、バイト数から秒数が求まる
 MP3_BYTES_PER_SEC = 48_000 / 8
+# 無音のMP3フレーム（edge-tts と同じ 24kHz・モノラル・48kbps。1フレーム144バイト＝0.024秒）
+SILENT_FRAME = bytes.fromhex("fff364c4") + bytes(140)
+# 読み上げの「間」（秒）
+PAUSE_AFTER_HEADLINE = 0.8
+PAUSE_BETWEEN_ITEMS = 1.0
+PAUSE_AFTER_GENRE = 0.6
 WEEKDAYS = "月火水木金土日"
 
 
@@ -254,25 +260,53 @@ def collect_genre(genre, limit_chars, now, seen, exclude_words, age_limit):
 
 # ---------- 読み上げ原稿 ----------
 
+def for_speech(text):
+    """読み上げに向かない記号を整える。"""
+    text = re.sub(r"【[^】]*】|\[[^\]]*\]", "", text)                 # 【気象予報士解説】などのラベル
+    text = re.sub(r"\s*[|｜].*$", "", text)                            # 「|著者名」「|サイト名」
+    text = re.sub(r"\((?:[A-Za-z0-9 .&-]{1,12})\)", "", text)          # 人工知能(AI) の (AI)
+    text = re.sub(r"(\d)\s*[~〜]\s*(\d)", r"\1から\2", text)           # 10~20 → 10から20
+    text = re.sub(r"[~〜→⇒“”\"#*]", "", text)
+    text = re.sub(r"\.{3,}", "、", text)
+    return text.strip(" 、")
+
+
+ENDINGS = ("。", "！", "？", "!", "?")
+
+
 def spoken_title(title):
-    return re.sub(r"[\s　]+", "、", title).strip("、")
+    text = re.sub(r"[\s　]+", "、", for_speech(title) or title).strip("、")
+    text = re.sub(r"([!?！？])、", r"\1 ", text)                        # 「見える?、4回の」→「見える? 4回の」
+    return text if text.endswith(ENDINGS) else text + "。"
+
+
+def spoken_summary(summary):
+    """本文は文として完結した部分だけを読む（途中で切れた断片は読まない）。"""
+    text = for_speech(summary)
+    if text.endswith("…") or not re.search(r"\w", text):
+        return ""
+    return text if text.endswith(ENDINGS) else text + "。"
 
 
 def build_segments(genres, today):
     """(種類, テキスト, 対象) の列。対象は音声開始位置を書き込む dict。"""
     date = f"{today.month}月{today.day}日、{WEEKDAYS[today.weekday()]}曜日"
-    segs = [("intro", f"おはようございます。{date}、朝のニュースです。", None)]
+    segs = [("intro", f"おはようございます。{date}、朝のニュースです。", None), ("pause", PAUSE_AFTER_GENRE, None)]
     for i, g in enumerate(genres):
         lead = "まずは、" if i == 0 else "続いて、"
         if g["items"]:
             segs.append(("genre", f"{lead}{g['name']}のニュースです。", g))
         else:
             segs.append(("genre", f"{lead}{g['name']}です。新しいニュースはありませんでした。", g))
+        segs.append(("pause", PAUSE_AFTER_GENRE, None))
         for item in g["items"]:
-            text = spoken_title(item["title"]) + "。"
-            if item["summary"]:
-                text += item["summary"]
-            segs.append(("item", text, item))
+            # 見出しのあとにワンテンポ置いてから本文を読む
+            segs.append(("item", spoken_title(item["title"]), item))
+            body = spoken_summary(item["summary"])
+            if body:
+                segs.append(("pause", PAUSE_AFTER_HEADLINE, None))
+                segs.append(("body", body, None))
+            segs.append(("pause", PAUSE_BETWEEN_ITEMS, None))
     segs.append(("outro", f"以上、{today.month}月{today.day}日のニュースでした。今日も良い一日を。", None))
     return segs
 
@@ -292,12 +326,18 @@ async def synth(text, voice, rate, sem):
             except Exception as e:
                 log(f"  ! 音声合成リトライ {attempt + 1}: {e}")
             await asyncio.sleep(2 * (attempt + 1))
-        raise RuntimeError(f"音声合成に失敗: {text[:30]}")
+        # 1か所の失敗で全体を止めない（その部分は短い無音にする）
+        log(f"  ! 音声合成に失敗したので飛ばします: {text[:30]}")
+        return SILENT_FRAME * 10
 
 
 async def synth_all(segs, voice, rate):
     sem = asyncio.Semaphore(4)
-    return await asyncio.gather(*(synth(text, voice, rate, sem) for _, text, _ in segs))
+    async def one(kind, value):
+        if kind == "pause":
+            return SILENT_FRAME * round(value / 0.024)
+        return await synth(value, voice, rate, sem)
+    return await asyncio.gather(*(one(kind, value) for kind, value, _ in segs))
 
 
 # ---------- メイン ----------
@@ -318,7 +358,7 @@ def main():
         sys.exit(1)
 
     segs = build_segments(genres, today)
-    log(f"音声合成中… ({len(segs)}セグメント)")
+    log(f"音声合成中… ({sum(k != 'pause' for k, _, _ in segs)}セグメント)")
     chunks = asyncio.run(synth_all(segs, config["voice"], config.get("rate", "+0%")))
 
     # MP3フレームはそのまま連結でき、各セグメントの開始秒はバイト数から計算できる
