@@ -131,7 +131,7 @@ def entry_time(entry):
     return calendar.timegm(t) if t else None
 
 
-def collect_feed(feed, genre, now, exclude_words):
+def collect_feed(feed, genre, now, exclude_words, age_limit):
     url = feed_url(feed)
     try:
         parsed = feedparser.parse(fetch(url))
@@ -141,11 +141,12 @@ def collect_feed(feed, genre, now, exclude_words):
 
     keywords = [k.lower() for k in feed.get("title_keywords", genre.get("title_keywords", []))]
     excluded = genre.get("exclude_domains", [])
-    max_age = feed.get("max_age_hours", genre.get("max_age_hours", 48)) * 3600
+    # ジャンルやフィードの指定に関係なく、全体の上限（age_limit 時間）より古い記事は対象外
+    max_age = min(feed.get("max_age_hours", genre.get("max_age_hours", age_limit)), age_limit) * 3600
     items = []
     for entry in parsed.entries:
         published = entry_time(entry)
-        if published and now - published > max_age:
+        if not published or now - published > max_age:  # 日付のない記事も古い可能性があるので除外
             continue
 
         title = clean_text(entry.get("title"))
@@ -219,9 +220,9 @@ def enrich(item, limit_chars):
     return item
 
 
-def collect_genre(genre, limit_chars, now, seen, exclude_words):
+def collect_genre(genre, limit_chars, now, seen, exclude_words, age_limit):
     log(f"[{genre['name']}]")
-    per_feed = [collect_feed(f, genre, now, exclude_words) for f in genre["feeds"]]
+    per_feed = [collect_feed(f, genre, now, exclude_words, age_limit) for f in genre["feeds"]]
     for items in per_feed:
         items.sort(key=lambda x: x["published"] or 0, reverse=True)
 
@@ -307,10 +308,11 @@ def main():
     now_ts = time.time()
     today = datetime.now(JST)
     limit = config.get("summary_chars", 120)
+    age_limit = config.get("max_age_hours", 48)
 
     seen = []
     exclude_words = config.get("exclude_title_words", [])
-    genres = [{"name": g["name"], "items": collect_genre(g, limit, now_ts, seen, exclude_words)} for g in config["genres"]]
+    genres = [{"name": g["name"], "items": collect_genre(g, limit, now_ts, seen, exclude_words, age_limit)} for g in config["genres"]]
     if not seen:
         log("記事が1件も取得できなかったため中止します")
         sys.exit(1)

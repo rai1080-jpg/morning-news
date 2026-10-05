@@ -5,13 +5,16 @@
 #   RSSがあるサイト     : { source: 名前, url: "RSSのURL" }
 #   Googleニュース検索  : { google: "検索語 when:1d" }   ← when:1d は「直近1日」
 #   オプション          : title_keywords（タイトルにいずれかの語を含む記事だけ残す）
-#                         max_age_hours（何時間前までの記事を対象にするか）
+#                         max_age_hours（何時間前までの記事を対象にするか。全体の上限より長くはできない）
 #                         fetch_page: true（記事ページから要約文を取る）
 
 # 読み上げ音声（edge-tts の音声名）
 #   ja-JP-NanamiNeural（女性） / ja-JP-KeitaNeural（男性）
 voice: ja-JP-NanamiNeural
 rate: "+10%"          # 読み上げ速度（例: "+0%", "+20%"）
+
+# この時間より古い記事は、どのジャンルでも読まない（48時間＝2日）
+max_age_hours: 48
 
 # 要約の最大文字数（目安）
 summary_chars: 120
@@ -41,14 +44,14 @@ genres:
 
   - name: 注目企業
     max_items: 6
-    max_age_hours: 168   # 企業ニュースは数が少ないので1週間分
+    max_age_hours: 48
     feeds:
-      - { google: "ベルシステム24 when:7d", title_keywords: [ベルシステム24] }
-      - { google: "トランスコスモス when:7d", title_keywords: [トランスコスモス, transcosmos] }
-      - { google: "アルティウスリンク when:7d", title_keywords: [アルティウスリンク] }
-      - { google: "ENEOS when:7d", title_keywords: [ENEOS] }
-      - { google: "西部ガス when:7d", title_keywords: [西部ガス] }
-      - { google: "エコア when:30d", title_keywords: [エコア], max_age_hours: 720 }
+      - { google: "ベルシステム24 when:2d", title_keywords: [ベルシステム24] }
+      - { google: "トランスコスモス when:2d", title_keywords: [トランスコスモス, transcosmos] }
+      - { google: "アルティウスリンク when:2d", title_keywords: [アルティウスリンク] }
+      - { google: "ENEOS when:2d", title_keywords: [ENEOS] }
+      - { google: "西部ガス when:2d", title_keywords: [西部ガス] }
+      - { google: "エコア when:2d", title_keywords: [エコア] }
 
   - name: AI
     max_items: 5
@@ -68,8 +71,8 @@ genres:
 
   - name: コールセンター
     max_items: 4
-    max_age_hours: 72
+    max_age_hours: 48
     title_keywords: [コールセンター, コンタクトセンター, カスタマーサポート, 問い合わせ窓口]
     exclude_domains: [lg.jp, go.jp, pando.life]
     feeds:
-      - { google: "コールセンター OR コンタクトセンター when:3d" }
+      - { google: "コールセンター OR コンタクトセンター when:2d" }
