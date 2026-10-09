@@ -46,6 +46,18 @@ python -m http.server -d docs 8000
 
 ブラウザで http://localhost:8000 を開きます。
 
+## 3Dキャスター
+
+画面上部の3Dアバターは、pixiv社が公開しているサンプルモデル
+[VRM1_Constraint_Twist_Sample](https://github.com/vrm-c/vrm-specification/tree/master/samples/VRM1_Constraint_Twist_Sample)
+（© 2022 pixiv Inc.、[VRM Public License 1.0](https://vrm.dev/licenses/1.0/)：誰でも利用可・再配布可・クレジット表記不要）を
+`docs/avatar/caster.vrm` として使っています。表示には [three.js](https://threejs.org/) と [three-vrm](https://github.com/pixiv/three-vrm) を使います。
+
+口パクは、ニュース生成時に音声エンジンから受け取った単語ごとの発話タイミング（`docs/data/speech.json`）に合わせて動かしています。
+ブラウザで音声を解析しないので、iPhoneの画面ロック中も再生が止まりません。
+
+別のVRMモデルに差し替えるときは、`docs/avatar/caster.vrm` を置き換えてください（利用条件の確認を忘れずに）。
+
 ## 注意
 
 - 無料の GitHub Pages は公開リポジトリが前提のため、URLを知っていれば誰でもページを見られます（中身はニュースの見出しと短い抜粋、元記事へのリンク）。

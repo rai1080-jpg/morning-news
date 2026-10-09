@@ -7,6 +7,13 @@
   --accent: #d9622b;
   --accent-soft: #fbe9df;
   --on-accent: #ffffff;
+  --stage-top: #ece4d6;
+  --stage-bottom: #d9cdb9;
+  --stage-glow: rgba(255, 252, 245, .9);
+  --caption-bg: rgba(29, 31, 35, .78);
+  --caption-text: #ffffff;
+  --caption-chip: #c2b49d;
+  --caption-chip-text: #1d1f23;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -18,6 +25,10 @@
     --accent: #f08a54;
     --accent-soft: #3a2a22;
     --on-accent: #1b1410;
+    --stage-top: #2a2620;
+    --stage-bottom: #191714;
+    --stage-glow: rgba(194, 180, 157, .22);
+    --caption-bg: rgba(0, 0, 0, .66);
   }
 }
 
@@ -38,6 +49,47 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .eyebrow { margin: 0; color: var(--accent); font-weight: 700; letter-spacing: .04em; }
 h1 { margin: 2px 0 4px; font-size: 1.7rem; line-height: 1.3; }
 .meta { margin: 0; color: var(--muted); font-size: .85rem; }
+
+/* アバターのスタジオ（画面幅いっぱい） */
+.stage {
+  position: relative;
+  margin: 0 -16px;
+  height: min(58vh, 460px);
+  min-height: 300px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 38%, var(--stage-glow), transparent 70%),
+    linear-gradient(180deg, var(--stage-top), var(--stage-bottom));
+}
+#avatar { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.stage-status {
+  position: absolute; inset: 0; margin: 0;
+  display: grid; place-items: center;
+  color: var(--muted); font-size: .9rem;
+}
+.caption {
+  position: absolute; left: 12px; right: 12px; bottom: 26px;
+  padding: 10px 14px 12px;
+  border-radius: 12px;
+  background: var(--caption-bg);
+  color: var(--caption-text);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.caption-genre {
+  display: inline-block; margin-bottom: 4px; padding: 1px 10px;
+  border-radius: 999px; font-size: .75rem; font-weight: 700;
+  background: var(--caption-chip); color: var(--caption-chip-text);
+}
+.caption-text {
+  margin: 0; font-size: .95rem; line-height: 1.55; font-weight: 600;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.caption.body .caption-text { font-weight: 400; }
+.credit {
+  position: absolute; right: 10px; bottom: 6px;
+  font-size: .62rem; color: var(--muted); opacity: .8;
+}
 
 /* プレーヤー（スクロールしても上部に残る） */
 .player {
