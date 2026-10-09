@@ -46,17 +46,15 @@ python -m http.server -d docs 8000
 
 ブラウザで http://localhost:8000 を開きます。
 
-## 3Dキャスター
+## キャスター
 
-画面上部の3Dアバターは、pixiv社が公開しているサンプルモデル
-[VRM1_Constraint_Twist_Sample](https://github.com/vrm-c/vrm-specification/tree/master/samples/VRM1_Constraint_Twist_Sample)
-（© 2022 pixiv Inc.、[VRM Public License 1.0](https://vrm.dev/licenses/1.0/)：誰でも利用可・再配布可・クレジット表記不要）を
-`docs/avatar/caster.vrm` として使っています。表示には [three.js](https://threejs.org/) と [three-vrm](https://github.com/pixiv/three-vrm) を使います。
+画面上部のキャスターは、AIで生成した**架空の人物**です（実在の人物ではありません）。
 
-口パクは、ニュース生成時に音声エンジンから受け取った単語ごとの発話タイミング（`docs/data/speech.json`）に合わせて動かしています。
-ブラウザで音声を解析しないので、iPhoneの画面ロック中も再生が止まりません。
+- 写真：このPCのローカル ComfyUI で、日本人写実系 SDXL モデル（fuduki_mix v2.0）を使って生成（元画像 `assets/anchor/cand_9509.png`）
+- 動画：その写真を開始画像に、Wan2.2 TI2V-5B で「話している」「黙っている」の2本（各3秒）を生成し、往復再生のループ動画にした（`docs/anchor/talk.mp4`・`idle.mp4`）
+- 切り替え：ニュース生成時に音声エンジンから受け取った単語ごとの発話タイミング（`docs/data/speech.json`）に合わせて、話している間だけ「話している動画」を重ねる（`docs/anchor.js`）。ブラウザで音声を解析しないので、iPhoneの画面ロック中も再生が止まらない
 
-別のVRMモデルに差し替えるときは、`docs/avatar/caster.vrm` を置き換えてください（利用条件の確認を忘れずに）。
+口の動きは単語の内容とは一致しません（“話している雰囲気”の動画です）。
 
 ## 注意
 

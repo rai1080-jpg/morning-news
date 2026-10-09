@@ -10,15 +10,6 @@
   <link rel="icon" href="icons/favicon-48.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
-        "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.5.5/lib/three-vrm.module.min.js"
-      }
-    }
-  </script>
 </head>
 <body>
   <header class="top">
@@ -28,13 +19,13 @@
   </header>
 
   <section class="stage" aria-label="ニュースキャスター">
-    <canvas id="avatar" aria-hidden="true"></canvas>
-    <p class="stage-status" id="stage-status" hidden></p>
+    <video id="anchor-idle" class="anchor" src="anchor/idle.mp4" poster="anchor/poster.jpg" muted loop playsinline autoplay preload="auto" aria-hidden="true"></video>
+    <video id="anchor-talk" class="anchor talk" src="anchor/talk.mp4" poster="anchor/poster.jpg" muted loop playsinline autoplay preload="auto" aria-hidden="true"></video>
     <div class="caption" aria-live="off">
       <span class="caption-genre" id="cap-genre">朝のニュース</span>
       <p class="caption-text" id="cap-text">▶ を押すと、キャスターがニュースを読み上げます</p>
     </div>
-    <small class="credit">3Dモデル：VRM1_Constraint_Twist_Sample © pixiv Inc.</small>
+    <small class="credit">キャスターはAIで生成した架空の人物です</small>
   </section>
 
   <section class="player" aria-label="プレーヤー">
@@ -62,6 +53,6 @@
   <p class="empty" id="error" hidden></p>
 
   <script src="app.js"></script>
-  <script type="module" src="avatar.js"></script>
+  <script src="anchor.js"></script>
 </body>
 </html>

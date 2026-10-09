@@ -3,3 +3,10 @@ docs/data/
 docs/audio/
 __pycache__/
 .venv/
+
+# キャスター作成の作業ファイル（動画のコマ・没候補）
+assets/anchor/frames_*/
+assets/anchor/cand_*.png
+assets/anchor/*_sheet*.png
+assets/anchor/candidates*.png
+!assets/anchor/cand_9509.png
