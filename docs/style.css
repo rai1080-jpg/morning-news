@@ -61,14 +61,28 @@ h1 { margin: 2px 0 4px; font-size: 1.7rem; line-height: 1.3; }
     radial-gradient(ellipse 60% 45% at 50% 38%, var(--stage-glow), transparent 70%),
     linear-gradient(180deg, var(--stage-top), var(--stage-bottom));
 }
-/* 「黙っている動画」の上に「話している動画」を重ね、話している間だけ表示する */
-.anchor {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; object-position: 50% 22%;
-  display: block;
+/* キャスター：口を閉じた写真の上に、口の形・まばたきの画像を重ねる（位置は写真に対する%） */
+.anchor-frame { position: absolute; inset: 0; overflow: hidden; }
+.anchor-face {
+  position: absolute;
+  /* 写真（704×896）でステージを覆い、顔が上寄りに来るように置く */
+  width: max(100%, calc((min(58vh, 460px)) * 0.7857));
+  aspect-ratio: 704 / 896;
+  left: 50%; top: 0;
+  transform: translateX(-50%);
+  transform-origin: 50% 40%;
+  animation: breathe 6s ease-in-out infinite;
 }
-.anchor.talk { opacity: 0; transition: opacity .25s ease; }
-.stage.talking .anchor.talk { opacity: 1; }
+.anchor-face img { position: absolute; display: block; user-select: none; pointer-events: none; }
+.anchor-face .base { inset: 0; width: 100%; height: 100%; }
+.anchor-face .part { opacity: 0; }
+.anchor-face .part.on { opacity: 1; }
+/* 呼吸しているような、ごくわずかな揺れ */
+@keyframes breathe {
+  0%, 100% { transform: translateX(-50%) scale(1) rotate(0deg); }
+  50% { transform: translateX(-50%) translateY(-0.4%) scale(1.008) rotate(.25deg); }
+}
+@media (prefers-reduced-motion: reduce) { .anchor-face { animation: none; } }
 .caption {
   position: absolute; left: 12px; right: 12px; bottom: 26px;
   padding: 10px 14px 12px;

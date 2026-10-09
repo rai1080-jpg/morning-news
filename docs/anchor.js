@@ -1,17 +1,20 @@
-// AIで作ったキャスターの「話している動画」と「黙っている動画」を、読み上げに合わせて切り替える。
-// 話しているかどうかは、ニュース生成時に記録した単語ごとの発話区間（data/speech.json）と音声の再生位置で判断する。
+// キャスターのリップシンク。
+// 口を閉じた写真（anchor/base.jpg）の上に、口の形（a i u e o）とまばたきの画像を重ね、
+// 読み上げに合わせて表示を切り替える。
+// どの瞬間にどの音を話しているかは、ニュース生成時に記録した
+// [開始秒, 長さ秒, 口の形の並び, ...]（data/speech.json）と音声の再生位置から計算する。
 // 音声そのものは解析しない（iPhoneで画面ロック中も再生を止めないため）。
 (() => {
   const audio = document.getElementById("audio");
   const stage = document.querySelector(".stage");
-  const idle = document.getElementById("anchor-idle");
-  const talk = document.getElementById("anchor-talk");
+  const face = document.getElementById("anchor-face");
+  const mouths = Object.fromEntries([...face.querySelectorAll("[data-mouth]")].map((el) => [el.dataset.mouth, el]));
+  const blink = face.querySelector(".blink");
 
-  const HOLD_SEC = 0.5;     // これ以上黙ったら「黙っている動画」に戻す（息継ぎでチカチカさせない）
-
-  let speech = [];          // [開始秒, 長さ秒, 開始秒, 長さ秒, ...]
+  let speech = [];
   let visible = true;
-  let lastWordEnd = -Infinity;
+  let shown = "";
+  let nextBlink = performance.now() + 2500;
 
   async function loadSpeech() {
     try {
@@ -22,50 +25,45 @@
     }
   }
 
-  // 再生位置 t で話している単語の終わりの秒（話していなければ null）
-  function wordEndAt(t) {
-    let lo = 0, hi = speech.length / 2 - 1;
+  // 再生位置 t で出している音の口の形（a i u e o / 話していなければ ""）
+  function shapeAt(t) {
+    let lo = 0, hi = speech.length / 3 - 1;
     while (lo <= hi) {
       const mid = (lo + hi) >> 1;
-      const start = speech[mid * 2], end = start + speech[mid * 2 + 1];
+      const start = speech[mid * 3], dur = speech[mid * 3 + 1];
       if (t < start) hi = mid - 1;
-      else if (t > end) lo = mid + 1;
-      else return end;
+      else if (t > start + dur) lo = mid + 1;
+      else {
+        // 単語の長さを音（モーラ）の数で等分し、今の音の口の形を選ぶ
+        const shapes = speech[mid * 3 + 2];
+        const i = Math.min(shapes.length - 1, Math.floor(((t - start) / dur) * shapes.length));
+        const s = shapes[i];
+        return s === "n" ? "" : s;
+      }
     }
-    return null;
+    return "";
   }
 
-  function playVideos() {
-    for (const v of [idle, talk]) v.play().catch(() => {});
+  function show(shape) {
+    if (shape === shown) return;
+    mouths[shown]?.classList.remove("on");
+    mouths[shape]?.classList.add("on");
+    shown = shape;
   }
 
-  function pauseVideos() {
-    for (const v of [idle, talk]) v.pause();
-  }
-
-  function tick() {
+  function tick(now) {
     requestAnimationFrame(tick);
     if (!visible || document.hidden) return;
-    const t = audio.currentTime;
-    const end = audio.paused ? null : wordEndAt(t);
-    if (end !== null) lastWordEnd = end;
-    const talking = !audio.paused && (end !== null || t - lastWordEnd < HOLD_SEC);
-    stage.classList.toggle("talking", talking);
+    show(audio.paused ? "" : shapeAt(audio.currentTime));
+    // まばたき：2.5〜6秒おきに0.13秒
+    if (now >= nextBlink) {
+      blink.classList.add("on");
+      setTimeout(() => blink.classList.remove("on"), 130);
+      nextBlink = now + 2500 + Math.random() * 3500;
+    }
   }
 
-  // 画面外・裏に回ったときは動画を止めて電池を節約する
-  new IntersectionObserver(([e]) => {
-    visible = e.isIntersecting;
-    if (visible && !document.hidden) playVideos(); else pauseVideos();
-  }).observe(stage);
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) pauseVideos(); else if (visible) playVideos();
-  });
-  // 省電力モードなどで自動再生が止められていても、再生ボタンを押したら動き出すようにする
-  audio.addEventListener("play", playVideos);
-  audio.addEventListener("seeked", () => { lastWordEnd = -Infinity; });
-
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(stage);
   loadSpeech();
-  playVideos();
-  tick();
+  requestAnimationFrame(tick);
 })();
