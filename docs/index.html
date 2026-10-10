@@ -18,6 +18,42 @@
     <p class="meta" id="meta"></p>
   </header>
 
+  <section class="weather loading" id="weather" aria-label="福岡市の今日の天気">
+    <div class="wx-head">
+      <h2>福岡市の天気</h2>
+      <span class="wx-source"></span>
+    </div>
+    <div class="wx-main">
+      <span class="wx-icon" aria-hidden="true">🌡️</span>
+      <div class="wx-hero">
+        <div class="wx-now">--°</div>
+        <div class="wx-now-label">現在の気温</div>
+      </div>
+      <div class="wx-summary">
+        <p class="wx-text">天気を読み込み中…</p>
+        <p class="wx-feel"></p>
+      </div>
+    </div>
+    <div class="wx-tiles">
+      <div class="wx-tile"><span class="wx-tile-label">最高気温</span><span class="wx-tile-value wx-max">--°</span></div>
+      <div class="wx-tile"><span class="wx-tile-label">最低気温</span><span class="wx-tile-value wx-min">--°</span></div>
+      <div class="wx-tile"><span class="wx-tile-label">降水確率</span><span class="wx-tile-value wx-pop">--%</span><span class="wx-tile-sub wx-pop-time"></span></div>
+    </div>
+    <p class="wx-pops"></p>
+    <div class="wx-charts" tabindex="0" aria-label="今日の1時間ごとの気温と降水確率のグラフ。左右の矢印キーで時刻を移動">
+      <p class="wx-chart-title">気温（1時間ごと）</p>
+      <svg class="wx-temp-chart" aria-hidden="true"></svg>
+      <p class="wx-chart-title">降水確率（1時間ごと）</p>
+      <svg class="wx-pop-chart" aria-hidden="true"></svg>
+      <div class="wx-cross" hidden></div>
+      <div class="wx-tip" hidden></div>
+    </div>
+    <details class="wx-details">
+      <summary>表で見る</summary>
+      <table class="wx-table"><thead><tr><th>時刻</th><th>気温</th><th>降水確率</th></tr></thead><tbody></tbody></table>
+    </details>
+  </section>
+
   <section class="player" aria-label="プレーヤー">
     <button class="play" id="play" aria-label="再生" disabled>
       <svg viewBox="0 0 24 24" class="icon-play"><path d="M8 5v14l11-7z"/></svg>
@@ -43,5 +79,6 @@
   <p class="empty" id="error" hidden></p>
 
   <script src="app.js"></script>
+  <script src="weather.js"></script>
 </body>
 </html>

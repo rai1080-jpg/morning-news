@@ -7,6 +7,11 @@
   --accent: #d9622b;
   --accent-soft: #fbe9df;
   --on-accent: #ffffff;
+  --wx-temp: #eb6834;      /* 気温の線（検証済みの配色） */
+  --wx-pop: #2a78d6;       /* 降水確率の棒 */
+  --wx-grid: #e1e0d9;
+  --wx-base: #c3c2b7;
+  --wx-tick: #898781;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -18,6 +23,10 @@
     --accent: #f08a54;
     --accent-soft: #3a2a22;
     --on-accent: #1b1410;
+    --wx-temp: #d95926;
+    --wx-pop: #3987e5;
+    --wx-grid: #2c2c2a;
+    --wx-base: #383835;
   }
 }
 
@@ -97,3 +106,55 @@ h1 { margin: 2px 0 4px; font-size: 1.7rem; line-height: 1.3; }
   padding: 4px 0; font-size: .85rem; white-space: nowrap;
 }
 .empty { color: var(--muted); text-align: center; padding: 24px 0; }
+
+/* ---------- 福岡市の天気 ---------- */
+.weather {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: 14px 16px 10px; margin-bottom: 16px;
+  transition: opacity .3s;
+}
+.weather.loading { opacity: .6; }
+.wx-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.wx-head h2 { margin: 0; font-size: 1rem; }
+.wx-source { color: var(--muted); font-size: .7rem; text-align: right; }
+.wx-main { display: flex; align-items: center; gap: 12px; margin: 8px 0 10px; }
+.wx-icon { font-size: 2.6rem; line-height: 1; }
+.wx-now { font-size: 3rem; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+.wx-now-label { color: var(--muted); font-size: .72rem; margin-top: 4px; }
+.wx-summary { flex: 1; min-width: 0; }
+.wx-text { margin: 0; font-weight: 600; font-size: .92rem; line-height: 1.45; }
+.wx-feel { margin: 4px 0 0; color: var(--muted); font-size: .8rem; }
+.wx-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.wx-tile {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 10px; border-radius: 10px; background: var(--bg);
+}
+.wx-tile-label { color: var(--muted); font-size: .7rem; line-height: 1.3; }
+.wx-tile-value { font-size: 1.35rem; font-weight: 700; }
+.wx-tile-sub { color: var(--muted); font-size: .68rem; margin-top: -2px; }
+.wx-pops { margin: 8px 0 0; color: var(--muted); font-size: .75rem; }
+.wx-pops:empty { display: none; }
+.wx-charts { position: relative; margin-top: 10px; outline: none; touch-action: pan-y; }
+.wx-charts:focus-visible { box-shadow: 0 0 0 2px var(--accent); border-radius: 8px; }
+.wx-chart-title { margin: 6px 0 0; color: var(--muted); font-size: .72rem; }
+.wx-charts svg { display: block; width: 100%; height: auto; overflow: visible; }
+.wx-grid { stroke: var(--wx-grid); stroke-width: 1; }
+.wx-base { stroke: var(--wx-base); stroke-width: 1; }
+.wx-tick { fill: var(--wx-tick); font-size: 10px; font-variant-numeric: tabular-nums; }
+.wx-label { fill: var(--text); font-size: 11px; font-weight: 600; }
+.wx-temp-line { fill: none; stroke: var(--wx-temp); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.wx-temp-area { fill: var(--wx-temp); opacity: .1; }
+.wx-temp-dot { fill: var(--wx-temp); stroke: var(--surface); stroke-width: 2; }
+.wx-pop-bar { fill: var(--wx-pop); }
+.wx-now-line { stroke: var(--wx-base); stroke-width: 1; }
+.wx-cross { position: absolute; top: 18px; bottom: 18px; width: 1px; background: var(--muted); pointer-events: none; }
+.wx-tip {
+  position: absolute; top: -6px; transform: translateX(-50%);
+  padding: 3px 8px; border-radius: 8px; white-space: nowrap; pointer-events: none;
+  background: var(--text); color: var(--bg); font-size: .75rem;
+}
+.wx-details { margin-top: 6px; font-size: .8rem; color: var(--muted); }
+.wx-details summary { cursor: pointer; padding: 4px 0; }
+.wx-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.wx-table th, .wx-table td { text-align: right; padding: 3px 6px; border-bottom: 1px solid var(--line); color: var(--text); }
+.wx-table th:first-child, .wx-table td:first-child { text-align: left; }

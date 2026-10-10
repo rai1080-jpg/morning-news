@@ -46,6 +46,15 @@ python -m http.server -d docs 8000
 
 ブラウザで http://localhost:8000 を開きます。
 
+## 福岡市の天気
+
+画面上部に、福岡市の今日の天気を表示します（`docs/weather.js`）。ページを開くたびに最新のデータを取得し、開いたままでも30分ごとに更新します。
+
+- 気象庁（[天気予報JSON](https://www.jma.go.jp/bosai/forecast/data/forecast/400000.json)）：天気（福岡地方）、最高・最低気温（福岡）、6時間ごとの降水確率
+- [Open-Meteo](https://open-meteo.com/)：現在の気温・体感・湿度・風、1時間ごとの気温と降水確率（グラフ）
+
+別の地域にしたいときは、`weather.js` の `JMA_URL`・`JMA_AREA`・`JMA_TEMP`（気象庁の地域コード）と、Open-Meteo の緯度・経度を変えます。
+
 ## 注意
 
 - 無料の GitHub Pages は公開リポジトリが前提のため、URLを知っていれば誰でもページを見られます（中身はニュースの見出しと短い抜粋、元記事へのリンク）。
