@@ -4,21 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>朝のニュース</title>
-  <meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#16181c" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f7f4ee">
+  <meta name="color-scheme" content="light">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&display=swap">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/favicon-48.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="style.css?v=__V__">
 </head>
 <body>
-  <header class="top">
+  <header class="top reveal" style="--i:0">
     <p class="eyebrow" id="date">読み込み中…</p>
     <h1>朝のニュース</h1>
+    <span class="rule" aria-hidden="true"></span>
     <p class="meta" id="meta"></p>
   </header>
 
-  <section class="weather loading" id="weather" aria-label="福岡市の今日の天気">
+  <section class="weather loading reveal" style="--i:1" id="weather" aria-label="福岡市の今日の天気">
     <div class="wx-head">
       <h2>福岡市の天気</h2>
       <span class="wx-source"></span>
@@ -54,19 +58,19 @@
     </details>
   </section>
 
-  <section class="player" aria-label="プレーヤー">
+  <section class="player reveal" style="--i:2" aria-label="プレーヤー">
     <button class="play" id="play" aria-label="再生" disabled>
       <svg viewBox="0 0 24 24" class="icon-play"><path d="M8 5v14l11-7z"/></svg>
       <svg viewBox="0 0 24 24" class="icon-pause"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
     </button>
     <div class="player-body">
-      <p class="now" id="now">全部聴く</p>
+      <p class="now"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="now">全部聴く</span></p>
       <input type="range" id="seek" min="0" max="100" value="0" step="0.1" aria-label="再生位置">
       <div class="player-row">
         <span class="time" id="time">0:00 / 0:00</span>
         <div class="controls">
-          <button class="ghost" id="prev" aria-label="前の記事">⏮</button>
-          <button class="ghost" id="next" aria-label="次の記事">⏭</button>
+          <button class="ghost icon" id="prev" aria-label="前の記事"><svg viewBox="0 0 24 24"><path d="M7 6h2v12H7zM20 6v12l-9-6z"/></svg></button>
+          <button class="ghost icon" id="next" aria-label="次の記事"><svg viewBox="0 0 24 24"><path d="M15 6h2v12h-2zM4 6v12l9-6z"/></svg></button>
           <button class="ghost rate" id="rate" aria-label="再生速度">1.0×</button>
         </div>
       </div>
@@ -74,7 +78,7 @@
     <audio id="audio" preload="metadata"></audio>
   </section>
 
-  <nav class="tabs" id="tabs" aria-label="ジャンル"></nav>
+  <nav class="tabs reveal" style="--i:3" id="tabs" aria-label="ジャンル"></nav>
   <main id="list"></main>
   <p class="empty" id="error" hidden></p>
 

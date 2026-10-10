@@ -14,6 +14,20 @@
   const $ = (sel) => box.querySelector(sel);
   const SVG = "http://www.w3.org/2000/svg";
   let hourly = null;   // [{ hour, temp, pop }]
+  let firstDraw = true; // 最初の表示だけグラフを動かす（回転・30分ごとの更新では動かさない）
+  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // 数字を0から目標値まで数え上げる
+  function countUp(node, to, digits, suffix) {
+    if (calm) { node.textContent = `${to.toFixed(digits)}${suffix}`; return; }
+    const from = 0, start = performance.now(), dur = 1100;
+    const step = (now) => {
+      const p = Math.min(1, (now - start) / dur), e = 1 - Math.pow(1 - p, 3);
+      node.textContent = `${(from + (to - from) * e).toFixed(digits)}${suffix}`;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
 
   const today = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);   // 日本時間の日付
   const nowHour = () => new Date(Date.now() + 9 * 3600e3).getUTCHours();
@@ -68,7 +82,8 @@
     const weather = jma ? jma.weather : "";
     $(".wx-icon").textContent = weather ? icon(jma.code, weather) : "🌡️";
     $(".wx-text").textContent = weather || "天気予報を取得できませんでした";
-    $(".wx-now").textContent = `${c.temperature_2m.toFixed(1)}°`;
+    if (firstDraw) countUp($(".wx-now"), c.temperature_2m, 1, "°");
+    else $(".wx-now").textContent = `${c.temperature_2m.toFixed(1)}°`;
     $(".wx-feel").textContent = `体感 ${Math.round(c.apparent_temperature)}° ・ 湿度 ${c.relative_humidity_2m}% ・ 風 ${c.wind_speed_10m.toFixed(1)}m/s`;
 
     const max = jma?.max ?? Math.round(meteo.daily.temperature_2m_max[0]);
@@ -112,6 +127,7 @@
     const wrap = $(".wx-charts");
     const W = wrap.clientWidth;
     if (!W) return;
+    lastWidth = W;
     const padL = 30, padR = 12;
     const x = (hr) => padL + (hr / 23) * (W - padL - padR);
     const h = nowHour();
@@ -131,7 +147,7 @@
     }
     const pts = hourly.map((d) => `${x(d.hour)},${yT(d.temp)}`).join(" ");
     el("polygon", { points: `${x(0)},${tBottom} ${pts} ${x(23)},${tBottom}`, class: "wx-temp-area" }, tempSvg);
-    el("polyline", { points: pts, class: "wx-temp-line" }, tempSvg);
+    const line = el("polyline", { points: pts, class: "wx-temp-line" }, tempSvg);
     // 最高気温の点にだけ値を添える
     const peak = hourly.reduce((a, b) => (b.temp > a.temp ? b : a));
     el("text", { x: x(peak.hour), y: yT(peak.temp) - 7, class: "wx-label", "text-anchor": "middle" }, tempSvg).textContent = `${peak.temp.toFixed(0)}°`;
@@ -151,13 +167,15 @@
       el("text", { x: padL - 6, y: yP(v) + 4, class: "wx-tick", "text-anchor": "end" }, popSvg).textContent = `${v}%`;
     }
     const bw = Math.min(10, ((W - padL - padR) / 24) - 2);
+    let n = 0;
     for (const d of hourly) {
       if (!d.pop) continue;
+      n++;
       const top = yP(d.pop), r = Math.min(3, (pBottom - top) / 2);
       // 先端だけ角を丸め、根元は四角のまま
       el("path", {
         d: `M${x(d.hour) - bw / 2},${pBottom} V${top + r} q0,-${r} ${r},-${r} H${x(d.hour) + bw / 2 - r} q${r},0 ${r},${r} V${pBottom} Z`,
-        class: "wx-pop-bar",
+        class: "wx-pop-bar", style: `--n:${n}`,
       }, popSvg);
     }
     for (const hr of [0, 6, 12, 18, 23]) {
@@ -166,6 +184,16 @@
     el("line", { x1: x(h), x2: x(h), y1: pTop, y2: pBottom, class: "wx-now-line" }, popSvg);
 
     setupHover(W, x, padL, padR);
+
+    // 最初の表示：線を左から描き、棒を下から伸ばす
+    if (firstDraw && !calm) {
+      const len = line.getTotalLength();
+      line.style.setProperty("--len", len);
+      line.style.strokeDasharray = len;
+      wrap.classList.add("animate");
+      setTimeout(() => { wrap.classList.remove("animate"); line.style.strokeDasharray = ""; }, 2600);
+    }
+    firstDraw = false;
   }
 
   // グラフに触れると、その時刻の気温と降水確率を表示する
@@ -217,7 +245,12 @@
     render(parsed, meteo.value);
   }
 
-  new ResizeObserver(() => drawCharts()).observe($(".wx-charts"));
+  // 画面の横幅が実際に変わったときだけ描き直す（最初のアニメーションを途中で消さないため）
+  let lastWidth = 0;
+  new ResizeObserver(() => {
+    const w = $(".wx-charts").clientWidth;
+    if (w && w !== lastWidth && hourly) { lastWidth = w; drawCharts(); }
+  }).observe($(".wx-charts"));
   load();
   // 開いたままの日も、30分ごとに最新に
   setInterval(load, 30 * 60 * 1000);

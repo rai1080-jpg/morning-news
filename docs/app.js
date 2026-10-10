@@ -64,7 +64,12 @@ function renderTabs(genres) {
         activeTab = name;
         localSet("tab", name);
         document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.textContent === name)));
-        document.querySelectorAll(".genre").forEach((s) => { s.hidden = name !== "すべて" && s.dataset.name !== name; });
+        document.querySelectorAll(".genre").forEach((s) => {
+          s.hidden = name !== "すべて" && s.dataset.name !== name;
+          // 切り替えたジャンルを、ふわっと出し直す
+          s.classList.remove("enter");
+          if (!s.hidden) { void s.offsetWidth; s.classList.add("enter"); }
+        });
       },
     }, name)));
 }
@@ -79,7 +84,8 @@ function renderList(genres) {
     for (const it of g.items) {
       const i = index++;
       const time = it.published ? it.published.slice(5, 16).replace("T", " ").replace("-", "/") : "";
-      section.append(el("article", { class: "card", id: `item-${i}` },
+      // 最初の数件だけ、少しずつ遅らせて登場させる
+      section.append(el("article", { class: "card reveal", id: `item-${i}`, style: `--i:${Math.min(i, 6) + 4}` },
         el("h3", {}, it.title),
         it.summary ? el("p", {}, it.summary) : null,
         el("div", { class: "card-foot" },
@@ -148,8 +154,14 @@ $("next").addEventListener("click", () => skip(1));
 $("rate").addEventListener("click", () => setRate(RATES[(RATES.indexOf(audio.playbackRate) + 1) % RATES.length]));
 $("seek").addEventListener("input", (e) => { audio.currentTime = (e.target.value / 100) * audio.duration; });
 
-audio.addEventListener("play", () => $("play").classList.add("playing"));
-audio.addEventListener("pause", () => $("play").classList.remove("playing"));
+audio.addEventListener("play", () => {
+  $("play").classList.add("playing");
+  document.querySelector(".player").classList.add("playing");
+});
+audio.addEventListener("pause", () => {
+  $("play").classList.remove("playing");
+  document.querySelector(".player").classList.remove("playing");
+});
 audio.addEventListener("ratechange", () => { if (!RATES.includes(audio.playbackRate)) setRate(1); });
 audio.addEventListener("timeupdate", () => {
   if (audio.duration) $("seek").value = (audio.currentTime / audio.duration) * 100;

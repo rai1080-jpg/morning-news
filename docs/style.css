@@ -1,33 +1,27 @@
+/* 明るくシックなデザイン（端末のダークモード設定に関わらず、常に明るい画面） */
 :root {
-  --bg: #f6f3ee;
-  --surface: #ffffff;
-  --text: #1d1f23;
-  --muted: #6b6f76;
-  --line: #e4dfd6;
-  --accent: #d9622b;
-  --accent-soft: #fbe9df;
-  --on-accent: #ffffff;
-  --wx-temp: #eb6834;      /* 気温の線（検証済みの配色） */
-  --wx-pop: #2a78d6;       /* 降水確率の棒 */
-  --wx-grid: #e1e0d9;
-  --wx-base: #c3c2b7;
-  --wx-tick: #898781;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #16181c;
-    --surface: #1f2228;
-    --text: #eceae6;
-    --muted: #9a9ea6;
-    --line: #2e3239;
-    --accent: #f08a54;
-    --accent-soft: #3a2a22;
-    --on-accent: #1b1410;
-    --wx-temp: #d95926;
-    --wx-pop: #3987e5;
-    --wx-grid: #2c2c2a;
-    --wx-base: #383835;
-  }
+  color-scheme: light;
+  --bg: #f7f4ee;           /* アイボリー */
+  --surface: #fffdf9;
+  --surface-2: #f3eee5;    /* タイルなど一段沈んだ面 */
+  --text: #2a2723;         /* 柔らかい黒 */
+  --muted: #8b847a;
+  --line: #e9e3d8;
+  --accent: #8a7552;       /* トープ（アイコンのベージュに合わせた差し色） */
+  --accent-soft: #f2ebdd;
+  --ink: #2a2723;          /* 再生ボタンなど */
+  --on-ink: #fffdf9;
+  --shadow: 0 1px 2px rgba(42, 39, 35, .04), 0 8px 24px rgba(42, 39, 35, .06);
+  --shadow-lift: 0 2px 4px rgba(42, 39, 35, .05), 0 14px 32px rgba(42, 39, 35, .10);
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --serif: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", sans-serif;
+  /* 天気グラフ（色覚・コントラストの検証済み） */
+  --wx-temp: #eb6834;
+  --wx-pop: #2a78d6;
+  --wx-grid: #ebe6dc;
+  --wx-base: #cfc8ba;
+  --wx-tick: #8b847a;
 }
 
 * { box-sizing: border-box; }
@@ -35,108 +29,72 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0 auto;
   max-width: 680px;
-  padding: 0 16px calc(32px + env(safe-area-inset-bottom));
+  padding: 0 16px calc(40px + env(safe-area-inset-bottom));
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", sans-serif;
-  line-height: 1.6;
+  font-family: var(--sans);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
 }
-button { font: inherit; color: inherit; cursor: pointer; }
+button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
-.top { padding: 28px 0 16px; }
-.eyebrow { margin: 0; color: var(--accent); font-weight: 700; letter-spacing: .04em; }
-h1 { margin: 2px 0 4px; font-size: 1.7rem; line-height: 1.3; }
-.meta { margin: 0; color: var(--muted); font-size: .85rem; }
+/* ---------- 登場アニメーション（上から順にふわっと） ---------- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.reveal { animation: rise .8s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms); }
 
-/* プレーヤー（スクロールしても上部に残る） */
-.player {
-  position: sticky; top: 0; z-index: 5;
-  display: flex; gap: 14px; align-items: center;
-  margin: 0 -16px; padding: 12px 16px;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
+/* ---------- 見出し ---------- */
+.top { padding: 34px 2px 18px; }
+.eyebrow {
+  margin: 0; color: var(--accent);
+  font-size: .78rem; font-weight: 600; letter-spacing: .18em;
 }
-.play {
-  flex: none; width: 56px; height: 56px; border-radius: 50%;
-  border: 0; background: var(--accent); color: var(--on-accent);
-  display: grid; place-items: center;
+h1 {
+  margin: 4px 0 0;
+  font-family: var(--serif); font-weight: 700;
+  font-size: 2rem; line-height: 1.25; letter-spacing: .06em;
 }
-.play:disabled { opacity: .4; }
-.play svg { width: 26px; height: 26px; fill: currentColor; }
-.play .icon-pause, .play.playing .icon-play { display: none; }
-.play.playing .icon-pause { display: block; }
-.player-body { flex: 1; min-width: 0; }
-.now { margin: 0; font-weight: 600; font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#seek { width: 100%; margin: 6px 0 2px; accent-color: var(--accent); }
-.player-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.time { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
-.controls { display: flex; gap: 4px; }
-.ghost {
-  border: 1px solid var(--line); background: var(--surface);
-  border-radius: 999px; padding: 2px 12px; min-height: 32px; font-size: .85rem;
+.rule {
+  display: block; width: 36px; height: 1px; margin: 12px 0 10px;
+  background: var(--accent);
+  transform-origin: left; animation: draw 1s var(--ease) .35s both;
 }
-
-.tabs {
-  display: flex; gap: 8px; overflow-x: auto; padding: 16px 0 8px;
-  scrollbar-width: none;
-}
-.tabs::-webkit-scrollbar { display: none; }
-.tab {
-  flex: none; border: 1px solid var(--line); background: var(--surface);
-  border-radius: 999px; padding: 6px 14px; font-size: .9rem;
-}
-.tab[aria-selected="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
-
-.genre h2 { font-size: 1.05rem; margin: 20px 0 8px; display: flex; align-items: center; gap: 8px; }
-.genre h2 .count { color: var(--muted); font-weight: 400; font-size: .85rem; }
-.card {
-  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-  padding: 14px 16px; margin-bottom: 10px;
-  transition: border-color .2s, background .2s;
-}
-.card.current { border-color: var(--accent); background: var(--accent-soft); }
-.card h3 { margin: 0 0 6px; font-size: 1rem; line-height: 1.5; }
-.card p { margin: 0 0 10px; color: var(--muted); font-size: .9rem; }
-.card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .8rem; color: var(--muted); }
-.card-foot a { color: var(--muted); }
-.from {
-  border: 0; background: none; color: var(--accent); font-weight: 600;
-  padding: 4px 0; font-size: .85rem; white-space: nowrap;
-}
-.empty { color: var(--muted); text-align: center; padding: 24px 0; }
+@keyframes draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.meta { margin: 0; color: var(--muted); font-size: .8rem; letter-spacing: .03em; }
 
 /* ---------- 福岡市の天気 ---------- */
 .weather {
-  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
-  padding: 14px 16px 10px; margin-bottom: 16px;
-  transition: opacity .3s;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+  padding: 18px 18px 12px; margin-bottom: 18px;
+  box-shadow: var(--shadow);
 }
-.weather.loading { opacity: .6; }
+.weather.loading .wx-main, .weather.loading .wx-tiles { opacity: .45; }
 .wx-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.wx-head h2 { margin: 0; font-size: 1rem; }
-.wx-source { color: var(--muted); font-size: .7rem; text-align: right; }
-.wx-main { display: flex; align-items: center; gap: 12px; margin: 8px 0 10px; }
-.wx-icon { font-size: 2.6rem; line-height: 1; }
-.wx-now { font-size: 3rem; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
-.wx-now-label { color: var(--muted); font-size: .72rem; margin-top: 4px; }
-.wx-summary { flex: 1; min-width: 0; }
-.wx-text { margin: 0; font-weight: 600; font-size: .92rem; line-height: 1.45; }
-.wx-feel { margin: 4px 0 0; color: var(--muted); font-size: .8rem; }
-.wx-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.wx-head h2 { margin: 0; font-family: var(--serif); font-weight: 700; font-size: 1.02rem; letter-spacing: .06em; }
+.wx-source { color: var(--muted); font-size: .66rem; text-align: right; letter-spacing: .02em; }
+.wx-main { display: flex; align-items: center; gap: 14px; margin: 12px 0 14px; transition: opacity .4s; }
+.wx-icon { font-size: 2.6rem; line-height: 1; animation: float 5s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.wx-now { font-size: 3.2rem; font-weight: 300; line-height: 1; letter-spacing: -.03em; }
+.wx-now-label { color: var(--muted); font-size: .68rem; margin-top: 6px; letter-spacing: .08em; }
+.wx-summary { flex: 1; min-width: 0; padding-left: 14px; border-left: 1px solid var(--line); }
+.wx-text { margin: 0; font-weight: 600; font-size: .9rem; line-height: 1.5; }
+.wx-feel { margin: 4px 0 0; color: var(--muted); font-size: .76rem; }
+.wx-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; transition: opacity .4s; }
 .wx-tile {
   display: flex; flex-direction: column; gap: 2px;
-  padding: 8px 10px; border-radius: 10px; background: var(--bg);
+  padding: 10px 12px; border-radius: 12px; background: var(--surface-2);
 }
-.wx-tile-label { color: var(--muted); font-size: .7rem; line-height: 1.3; }
-.wx-tile-value { font-size: 1.35rem; font-weight: 700; }
-.wx-tile-sub { color: var(--muted); font-size: .68rem; margin-top: -2px; }
-.wx-pops { margin: 8px 0 0; color: var(--muted); font-size: .75rem; }
+.wx-tile-label { color: var(--muted); font-size: .66rem; letter-spacing: .08em; }
+.wx-tile-value { font-size: 1.4rem; font-weight: 500; letter-spacing: -.01em; }
+.wx-tile-sub { color: var(--muted); font-size: .64rem; margin-top: -2px; }
+.wx-pops { margin: 10px 0 0; color: var(--muted); font-size: .72rem; letter-spacing: .02em; }
 .wx-pops:empty { display: none; }
-.wx-charts { position: relative; margin-top: 10px; outline: none; touch-action: pan-y; }
+.wx-charts { position: relative; margin-top: 12px; outline: none; touch-action: pan-y; }
 .wx-charts:focus-visible { box-shadow: 0 0 0 2px var(--accent); border-radius: 8px; }
-.wx-chart-title { margin: 6px 0 0; color: var(--muted); font-size: .72rem; }
+.wx-chart-title { margin: 8px 0 0; color: var(--muted); font-size: .68rem; letter-spacing: .06em; }
 .wx-charts svg { display: block; width: 100%; height: auto; overflow: visible; }
 .wx-grid { stroke: var(--wx-grid); stroke-width: 1; }
 .wx-base { stroke: var(--wx-base); stroke-width: 1; }
@@ -147,14 +105,144 @@ h1 { margin: 2px 0 4px; font-size: 1.7rem; line-height: 1.3; }
 .wx-temp-dot { fill: var(--wx-temp); stroke: var(--surface); stroke-width: 2; }
 .wx-pop-bar { fill: var(--wx-pop); }
 .wx-now-line { stroke: var(--wx-base); stroke-width: 1; }
-.wx-cross { position: absolute; top: 18px; bottom: 18px; width: 1px; background: var(--muted); pointer-events: none; }
+/* グラフの登場：線は左から描かれ、面と目盛りは遅れてふわっと、棒は下から伸びる */
+.wx-charts.animate .wx-temp-line { animation: stroke 1.4s var(--ease) both; }
+.wx-charts.animate .wx-temp-area,
+.wx-charts.animate .wx-label,
+.wx-charts.animate .wx-temp-dot { animation: fade .8s ease 1s both; }
+.wx-charts.animate .wx-pop-bar {
+  transform-box: fill-box; transform-origin: 50% 100%;
+  animation: grow .7s var(--ease) both; animation-delay: calc(var(--n) * 25ms + .3s);
+}
+@keyframes stroke { from { stroke-dashoffset: var(--len); } to { stroke-dashoffset: 0; } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.wx-temp-dot { animation: pulse 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+.wx-cross { position: absolute; top: 22px; bottom: 20px; width: 1px; background: var(--muted); pointer-events: none; }
 .wx-tip {
   position: absolute; top: -6px; transform: translateX(-50%);
-  padding: 3px 8px; border-radius: 8px; white-space: nowrap; pointer-events: none;
-  background: var(--text); color: var(--bg); font-size: .75rem;
+  padding: 3px 10px; border-radius: 999px; white-space: nowrap; pointer-events: none;
+  background: var(--ink); color: var(--on-ink); font-size: .72rem;
 }
-.wx-details { margin-top: 6px; font-size: .8rem; color: var(--muted); }
-.wx-details summary { cursor: pointer; padding: 4px 0; }
+.wx-details { margin-top: 6px; font-size: .76rem; color: var(--muted); }
+.wx-details summary { cursor: pointer; padding: 4px 0; letter-spacing: .04em; }
 .wx-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-variant-numeric: tabular-nums; }
-.wx-table th, .wx-table td { text-align: right; padding: 3px 6px; border-bottom: 1px solid var(--line); color: var(--text); }
+.wx-table th, .wx-table td { text-align: right; padding: 3px 6px; border-bottom: 1px solid var(--line); color: var(--text); font-weight: 400; }
+.wx-table th { color: var(--muted); font-size: .7rem; }
 .wx-table th:first-child, .wx-table td:first-child { text-align: left; }
+
+/* ---------- プレーヤー（スクロールしても上部に残る） ---------- */
+.player {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; gap: 16px; align-items: center;
+  margin: 0 -16px; padding: 12px 16px;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom: 1px solid var(--line);
+}
+.play {
+  position: relative; flex: none; width: 56px; height: 56px; border-radius: 50%;
+  border: 0; background: var(--ink); color: var(--on-ink);
+  display: grid; place-items: center;
+  box-shadow: 0 6px 16px rgba(42, 39, 35, .18);
+  transition: transform .25s var(--ease), box-shadow .25s;
+}
+.play:active { transform: scale(.94); }
+.play:disabled { opacity: .35; }
+.play svg { width: 24px; height: 24px; fill: currentColor; }
+.play .icon-pause, .play.playing .icon-play { display: none; }
+.play.playing .icon-pause { display: block; }
+/* 再生中は、ボタンのまわりに静かな波紋 */
+.play.playing::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  border: 1px solid var(--accent);
+  animation: ripple 2.2s ease-out infinite;
+}
+@keyframes ripple { from { transform: scale(1); opacity: .7; } to { transform: scale(1.45); opacity: 0; } }
+.player-body { flex: 1; min-width: 0; }
+.now {
+  margin: 0; display: flex; align-items: center; gap: 8px;
+  font-weight: 600; font-size: .88rem; white-space: nowrap; overflow: hidden;
+}
+#now { overflow: hidden; text-overflow: ellipsis; }
+/* 再生中だけ動く小さなイコライザー */
+.eq { display: none; flex: none; align-items: flex-end; gap: 2px; height: 12px; }
+.eq i { display: block; width: 2px; height: 100%; border-radius: 1px; background: var(--accent); transform-origin: bottom; animation: eq 1s ease-in-out infinite; }
+.eq i:nth-child(2) { animation-delay: -.3s; }
+.eq i:nth-child(3) { animation-delay: -.6s; }
+.eq i:nth-child(4) { animation-delay: -.15s; }
+@keyframes eq { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+.player.playing .eq { display: flex; }
+#seek { width: 100%; margin: 8px 0 2px; accent-color: var(--ink); }
+.player-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.time { color: var(--muted); font-size: .76rem; font-variant-numeric: tabular-nums; }
+.controls { display: flex; gap: 6px; }
+.ghost {
+  border: 1px solid var(--line); background: var(--surface);
+  border-radius: 999px; padding: 2px 12px; min-height: 32px; font-size: .8rem;
+  transition: background .2s, transform .2s var(--ease);
+}
+.ghost:active { transform: scale(.94); background: var(--surface-2); }
+.ghost.icon { display: grid; place-items: center; padding: 0; width: 36px; }
+.ghost.icon svg { width: 15px; height: 15px; fill: var(--text); }
+
+/* ---------- ジャンルのタブ ---------- */
+.tabs {
+  display: flex; gap: 8px; overflow-x: auto; padding: 18px 0 6px;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: none; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 999px; padding: 6px 16px; font-size: .84rem; letter-spacing: .04em;
+  transition: background .3s var(--ease), color .3s, border-color .3s, transform .2s var(--ease);
+}
+.tab:active { transform: scale(.96); }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+
+/* ---------- 記事 ---------- */
+.genre h2 {
+  display: flex; align-items: baseline; gap: 10px;
+  margin: 26px 2px 10px;
+  font-family: var(--serif); font-weight: 700; font-size: 1.12rem; letter-spacing: .06em;
+}
+.genre h2::before { content: ""; width: 14px; height: 1px; background: var(--accent); align-self: center; }
+.genre h2 .count { color: var(--muted); font-family: var(--sans); font-weight: 400; font-size: .74rem; letter-spacing: .04em; }
+.genre.enter { animation: rise .6s var(--ease) both; }
+.card {
+  position: relative;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: 16px 18px; margin-bottom: 10px;
+  box-shadow: var(--shadow);
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease), border-color .3s, background .3s;
+}
+.card.reveal { animation-duration: .7s; }
+@media (hover: hover) { .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); } }
+.card:active { transform: scale(.99); }
+/* 読んでいる記事：左に細い差し色と、やわらかく呼吸する光 */
+.card.current { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface)); animation: glow 2.8s ease-in-out infinite; }
+.card.current::before {
+  content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 0 3px 3px 0;
+  background: var(--accent); animation: draw-y .5s var(--ease) both;
+}
+@keyframes glow { 0%, 100% { box-shadow: var(--shadow); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent), var(--shadow-lift); } }
+@keyframes draw-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.card h3 { margin: 0 0 6px; font-size: .98rem; font-weight: 600; line-height: 1.55; }
+.card p { margin: 0 0 12px; color: var(--muted); font-size: .86rem; line-height: 1.7; }
+.card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .74rem; color: var(--muted); }
+.card-foot a { color: var(--muted); text-underline-offset: 3px; }
+.from {
+  border: 1px solid var(--line); background: var(--surface); color: var(--text);
+  border-radius: 999px; padding: 3px 12px; font-size: .76rem; font-weight: 600; white-space: nowrap;
+  transition: background .2s, color .2s, border-color .2s, transform .2s var(--ease);
+}
+.from:hover { border-color: var(--accent); }
+.from:active { transform: scale(.95); background: var(--ink); color: var(--on-ink); }
+.empty { color: var(--muted); text-align: center; padding: 24px 0; font-size: .86rem; }
+
+/* 端末で「視差効果を減らす」を設定している人には、動きを出さない */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
