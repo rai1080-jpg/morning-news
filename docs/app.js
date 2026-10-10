@@ -174,4 +174,24 @@ audio.addEventListener("error", () => {
   $("error").hidden = false;
 });
 
+// 新しい版が公開されていたら、自動で読み込み直す。
+// ページ本体はスマホに最大10分保存されるため、保存されない版番号ファイル（version.txt）と見比べる。
+const APP_VERSION = document.querySelector('meta[name="app-version"]')?.content;
+async function checkVersion() {
+  if (!APP_VERSION || APP_VERSION.startsWith("__")) return;      // PCでの確認時は何もしない
+  if (!audio.paused) return;                                      // 聴いている途中は止めない
+  try {
+    const res = await fetch(`version.txt?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return;
+    const latest = (await res.text()).trim();
+    if (!latest || latest === APP_VERSION) return;
+    const url = new URL(location.href);
+    if (url.searchParams.get("v") === latest) return;             // 読み込み直しても古い場合は繰り返さない
+    url.searchParams.set("v", latest);                            // 別のURLにすると、保存された古いページを使わない
+    location.replace(url.toString());
+  } catch {}
+}
+checkVersion();
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(); });
+
 load();

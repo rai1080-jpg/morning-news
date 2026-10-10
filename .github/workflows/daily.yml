@@ -28,7 +28,10 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python scripts/build.py
       # スマホに古い見た目・処理が残らないよう、読み込むファイルに更新ごとの番号を付ける
-      - run: sed -i "s/__V__/${GITHUB_SHA::7}-$(date +%s)/g" docs/index.html
+      - run: |
+          V="${GITHUB_SHA::7}-$(date +%s)"
+          sed -i "s/__V__/$V/g" docs/index.html
+          echo "$V" > docs/version.txt
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs
