@@ -4,15 +4,5 @@ docs/audio/
 __pycache__/
 .venv/
 
-# キャスター作成の作業ファイル（動画のコマ・没候補）
-assets/anchor/frames_*/
-assets/anchor/cand_*.png
-assets/anchor/*_sheet*.png
-assets/anchor/candidates*.png
-!assets/anchor/cand_9509.png
-assets/anchor/viseme_*/
-assets/anchor/viseme_*.png
-assets/anchor/mouth_*.png
-assets/anchor/mouth_*.json
-assets/anchor/mask_*.png
-assets/anchor/vowel_sheet.png
+# キャスター作成の作業ファイル（アバターは取りやめ。ローカルに残っている分は送らない）
+assets/anchor/

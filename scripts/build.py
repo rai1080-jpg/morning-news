@@ -15,7 +15,6 @@ from urllib.parse import quote, urlparse
 
 import edge_tts
 import feedparser
-import pykakasi
 import requests
 import yaml
 
@@ -306,62 +305,37 @@ def build_segments(genres, today):
             body = spoken_summary(item["summary"])
             if body:
                 segs.append(("pause", PAUSE_AFTER_HEADLINE, None))
-                segs.append(("body", body, item))
+                segs.append(("body", body, None))
             segs.append(("pause", PAUSE_BETWEEN_ITEMS, None))
     segs.append(("outro", f"以上、{today.month}月{today.day}日のニュースでした。今日も良い一日を。", None))
     return segs
 
 
-# ---------- 口の形（リップシンク用） ----------
-
-KAKASI = pykakasi.kakasi()
-
-
-def word_vowels(text):
-    """単語の読みから、口の形の並びを返す（a i u e o、口を閉じる n）。例：首相 → shushou → uou"""
-    shapes = ""
-    for part in KAKASI.convert(text):
-        roman = part["hepburn"].lower()
-        if not re.fullmatch(r"[a-z']+", roman):
-            # 読めなかった数字・英字などは、文字数ぶん「あ」「え」を交互に当てる
-            shapes += "".join("ae"[i % 2] for i, ch in enumerate(roman) if ch.isalnum())
-            continue
-        for i, ch in enumerate(roman):
-            if ch in "aiueo":
-                shapes += ch
-            elif ch == "n" and (i + 1 == len(roman) or roman[i + 1] not in "aiueoy"):
-                shapes += "n"                       # 「ん」は口を閉じる
-    return shapes or "a"
-
-
 # ---------- 音声合成 ----------
 
 async def synth(text, voice, rate, sem):
-    """音声と、単語ごとの発話タイミング [(開始秒, 長さ秒, 口の形の並び), ...] を返す（キャスターのリップシンク用）。"""
     async with sem:
         for attempt in range(3):
             try:
-                data, words = b"", []
-                async for chunk in edge_tts.Communicate(text, voice, rate=rate, boundary="WordBoundary").stream():
+                data = b""
+                async for chunk in edge_tts.Communicate(text, voice, rate=rate).stream():
                     if chunk["type"] == "audio":
                         data += chunk["data"]
-                    elif chunk["type"] == "WordBoundary":
-                        words.append((chunk["offset"] / 1e7, chunk["duration"] / 1e7, word_vowels(chunk["text"])))
                 if data:
-                    return data, words
+                    return data
             except Exception as e:
                 log(f"  ! 音声合成リトライ {attempt + 1}: {e}")
             await asyncio.sleep(2 * (attempt + 1))
         # 1か所の失敗で全体を止めない（その部分は短い無音にする）
         log(f"  ! 音声合成に失敗したので飛ばします: {text[:30]}")
-        return SILENT_FRAME * 10, []
+        return SILENT_FRAME * 10
 
 
 async def synth_all(segs, voice, rate):
     sem = asyncio.Semaphore(4)
     async def one(kind, value):
         if kind == "pause":
-            return SILENT_FRAME * round(value / 0.024), []
+            return SILENT_FRAME * round(value / 0.024)
         return await synth(value, voice, rate, sem)
     return await asyncio.gather(*(one(kind, value) for kind, value, _ in segs))
 
@@ -385,20 +359,13 @@ def main():
 
     segs = build_segments(genres, today)
     log(f"音声合成中… ({sum(k != 'pause' for k, _, _ in segs)}セグメント)")
-    results = asyncio.run(synth_all(segs, config["voice"], config.get("rate", "+0%")))
-    chunks = [audio for audio, _ in results]
+    chunks = asyncio.run(synth_all(segs, config["voice"], config.get("rate", "+0%")))
 
     # MP3フレームはそのまま連結でき、各セグメントの開始秒はバイト数から計算できる
     offset = 0
-    cues, speech = [], []   # 字幕（話している文）と、単語ごとの発話区間（口パク用）
-    for (kind, value, target), (chunk, words) in zip(segs, results):
-        start = offset / MP3_BYTES_PER_SEC
+    for (_, _, target), chunk in zip(segs, chunks):
         if target is not None:
-            target["body_start" if kind == "body" else "start"] = round(start, 2)
-        if kind != "pause":
-            cues.append({"start": round(start, 2), "end": round(start + len(chunk) / MP3_BYTES_PER_SEC, 2), "kind": kind, "text": value})
-            for w, d, shapes in words:
-                speech += [round(start + w, 2), round(d, 2), shapes]
+            target["start"] = round(offset / MP3_BYTES_PER_SEC, 2)
         offset += len(chunk)
     duration = round(offset / MP3_BYTES_PER_SEC, 1)
 
@@ -422,14 +389,10 @@ def main():
                 "url": it["url"],
                 "published": datetime.fromtimestamp(it["published"], JST).isoformat(timespec="minutes") if it["published"] else None,
                 "start": it["start"],
-                "body_start": it.get("body_start"),
             } for it in g["items"]],
         } for g in genres],
-        "cues": cues,
     }
     (DOCS / "data" / "latest.json").write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
-    # リップシンク用の発話区間（[開始秒, 長さ秒, 口の形, ...]）は数千件になるので、別ファイルに詰めて保存
-    (DOCS / "data" / "speech.json").write_text(json.dumps(speech, separators=(",", ":")), encoding="utf-8")
     log(f"完了: {len(seen)}本 / {int(duration // 60)}分{int(duration % 60)}秒")
 
 

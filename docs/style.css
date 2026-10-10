@@ -7,13 +7,6 @@
   --accent: #d9622b;
   --accent-soft: #fbe9df;
   --on-accent: #ffffff;
-  --stage-top: #ece4d6;
-  --stage-bottom: #d9cdb9;
-  --stage-glow: rgba(255, 252, 245, .9);
-  --caption-bg: rgba(29, 31, 35, .78);
-  --caption-text: #ffffff;
-  --caption-chip: #c2b49d;
-  --caption-chip-text: #1d1f23;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -25,10 +18,6 @@
     --accent: #f08a54;
     --accent-soft: #3a2a22;
     --on-accent: #1b1410;
-    --stage-top: #2a2620;
-    --stage-bottom: #191714;
-    --stage-glow: rgba(194, 180, 157, .22);
-    --caption-bg: rgba(0, 0, 0, .66);
   }
 }
 
@@ -49,64 +38,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .eyebrow { margin: 0; color: var(--accent); font-weight: 700; letter-spacing: .04em; }
 h1 { margin: 2px 0 4px; font-size: 1.7rem; line-height: 1.3; }
 .meta { margin: 0; color: var(--muted); font-size: .85rem; }
-
-/* アバターのスタジオ（画面幅いっぱい） */
-.stage {
-  position: relative;
-  margin: 0 -16px;
-  height: min(58vh, 460px);
-  min-height: 300px;
-  overflow: hidden;
-  background:
-    radial-gradient(ellipse 60% 45% at 50% 38%, var(--stage-glow), transparent 70%),
-    linear-gradient(180deg, var(--stage-top), var(--stage-bottom));
-}
-/* キャスター：口を閉じた写真の上に、口の形・まばたきの画像を重ねる（位置は写真に対する%） */
-.anchor-frame { position: absolute; inset: 0; overflow: hidden; }
-.anchor-face {
-  position: absolute;
-  /* 写真（704×896）でステージを覆い、顔が上寄りに来るように置く */
-  width: max(100%, calc((min(58vh, 460px)) * 0.7857));
-  aspect-ratio: 704 / 896;
-  left: 50%; top: 0;
-  transform: translateX(-50%);
-  transform-origin: 50% 40%;
-  animation: breathe 6s ease-in-out infinite;
-}
-.anchor-face img { position: absolute; display: block; user-select: none; pointer-events: none; }
-.anchor-face .base { inset: 0; width: 100%; height: 100%; }
-.anchor-face .part { opacity: 0; }
-.anchor-face .part.on { opacity: 1; }
-/* 呼吸しているような、ごくわずかな揺れ */
-@keyframes breathe {
-  0%, 100% { transform: translateX(-50%) scale(1) rotate(0deg); }
-  50% { transform: translateX(-50%) translateY(-0.4%) scale(1.008) rotate(.25deg); }
-}
-@media (prefers-reduced-motion: reduce) { .anchor-face { animation: none; } }
-.caption {
-  position: absolute; left: 12px; right: 12px; bottom: 26px;
-  padding: 10px 14px 12px;
-  border-radius: 12px;
-  background: var(--caption-bg);
-  color: var(--caption-text);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-.caption-genre {
-  display: inline-block; margin-bottom: 4px; padding: 1px 10px;
-  border-radius: 999px; font-size: .75rem; font-weight: 700;
-  background: var(--caption-chip); color: var(--caption-chip-text);
-}
-.caption-text {
-  margin: 0; font-size: .95rem; line-height: 1.55; font-weight: 600;
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
-.caption.body .caption-text { font-weight: 400; }
-.credit {
-  position: absolute; right: 10px; bottom: 6px;
-  font-size: .62rem; color: #fff; opacity: .75;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
-}
 
 /* プレーヤー（スクロールしても上部に残る） */
 .player {

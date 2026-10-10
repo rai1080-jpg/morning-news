@@ -3,10 +3,7 @@ const audio = $("audio");
 const RATES = [1, 1.25, 1.5, 1.75];
 
 let items = [];      // 全記事（音声の順）
-let cues = [];       // 字幕（読み上げている文と開始・終了秒）
 let current = -1;    // 再生中の記事の index
-let currentCue = -1;
-let stageVisible = true;
 let activeTab = localGet("tab") || "すべて";
 
 function localGet(key) { try { return localStorage.getItem(key); } catch { return null; } }
@@ -46,7 +43,6 @@ async function load() {
   $("meta").textContent = `${total}本・約${Math.round(data.duration / 60)}分・${updated}更新`;
 
   items = data.genres.flatMap((g) => g.items.map((it) => ({ ...it, genre: g.name })));
-  cues = data.cues || [];
   audio.src = `${data.audio}?d=${data.date}`;
   $("play").disabled = false;
 
@@ -56,15 +52,6 @@ async function load() {
 
   const savedRate = parseFloat(localGet("rate"));
   if (RATES.includes(savedRate)) setRate(savedRate);
-
-  // URL の末尾に #t=秒 を付けると、その位置から再生する
-  const jump = location.hash.match(/^#t=(\d+(?:\.\d+)?)/);
-  if (jump) {
-    audio.addEventListener("loadedmetadata", () => {
-      audio.currentTime = Number(jump[1]);
-      audio.play().catch(() => {});
-    }, { once: true });
-  }
 }
 
 function renderTabs(genres) {
@@ -122,28 +109,11 @@ function updateCurrent() {
   const card = document.getElementById(`item-${idx}`);
   card?.classList.add("current");
   $("now").textContent = idx >= 0 ? `${items[idx].genre}｜${items[idx].title}` : "全部聴く";
-  // アバターを見ている間は一覧を動かさない（一覧を見ているときだけ再生中の記事へ移動）
-  if (card && !audio.paused && !stageVisible && !card.closest("[hidden]")) card.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (card && !audio.paused && !card.closest("[hidden]")) card.scrollIntoView({ behavior: "smooth", block: "center" });
   if ("mediaSession" in navigator && navigator.mediaSession.metadata && idx >= 0) {
     navigator.mediaSession.metadata.title = items[idx].title;
     navigator.mediaSession.metadata.album = items[idx].genre;
   }
-}
-
-// 再生位置に合わせて字幕（ジャンル＋読んでいる文）を切り替える
-function updateCaption() {
-  const t = audio.currentTime;
-  let idx = -1;
-  for (let i = 0; i < cues.length && cues[i].start <= t + 0.05; i++) idx = i;
-  if (idx === currentCue) return;
-  currentCue = idx;
-  const cue = cues[idx];
-  if (!cue) return;
-  const item = items[indexAt(t)];
-  const genre = cue.kind === "intro" || cue.kind === "outro" || !item ? "朝のニュース" : item.genre;
-  $("cap-genre").textContent = genre;
-  $("cap-text").textContent = cue.text;
-  document.querySelector(".caption").classList.toggle("body", cue.kind === "body");
 }
 
 function setRate(r) {
@@ -185,14 +155,11 @@ audio.addEventListener("timeupdate", () => {
   if (audio.duration) $("seek").value = (audio.currentTime / audio.duration) * 100;
   $("time").textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
   updateCurrent();
-  updateCaption();
 });
 audio.addEventListener("loadedmetadata", () => { $("time").textContent = `0:00 / ${fmt(audio.duration)}`; });
 audio.addEventListener("error", () => {
   $("error").textContent = "音声を読み込めませんでした。";
   $("error").hidden = false;
 });
-
-new IntersectionObserver(([e]) => { stageVisible = e.isIntersecting; }, { threshold: 0.3 }).observe(document.querySelector(".stage"));
 
 load();
