@@ -4,6 +4,7 @@ import asyncio
 import calendar
 import html
 import json
+import random
 import re
 import sys
 import time
@@ -14,9 +15,17 @@ from pathlib import Path
 from urllib.parse import quote, urlparse
 
 import edge_tts
+import edge_tts.communicate
 import feedparser
 import requests
 import yaml
+
+# 2026年10月から、edge-tts の従来の接続先（speech.platform.bing.com）が 403 で拒否されるようになった。
+# 新しい Edge と同じ接続先に差し替える（edge-tts 本体の修正案 rany2/edge-tts#491 と同じ内容。正式版で直れば不要）
+edge_tts.communicate.WSS_URL = (
+    "wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1"
+    f"?Ocp-Apim-Subscription-Key={edge_tts.constants.TRUSTED_CLIENT_TOKEN}"
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
@@ -313,9 +322,12 @@ def build_segments(genres, today):
 
 # ---------- 音声合成 ----------
 
+FAILED = []   # 音声を作れなかった文
+
+
 async def synth(text, voice, rate, sem):
     async with sem:
-        for attempt in range(3):
+        for attempt in range(5):
             try:
                 data = b""
                 async for chunk in edge_tts.Communicate(text, voice, rate=rate).stream():
@@ -325,14 +337,15 @@ async def synth(text, voice, rate, sem):
                     return data
             except Exception as e:
                 log(f"  ! 音声合成リトライ {attempt + 1}: {e}")
-            await asyncio.sleep(2 * (attempt + 1))
+            await asyncio.sleep(3 * 2 ** attempt + random.random() * 2)   # 断られたら待ち時間を延ばしてやり直す
         # 1か所の失敗で全体を止めない（その部分は短い無音にする）
         log(f"  ! 音声合成に失敗したので飛ばします: {text[:30]}")
+        FAILED.append(text)
         return SILENT_FRAME * 10
 
 
 async def synth_all(segs, voice, rate):
-    sem = asyncio.Semaphore(4)
+    sem = asyncio.Semaphore(2)   # 同時に送りすぎると 429（送りすぎ）で断られる
     async def one(kind, value):
         if kind == "pause":
             return SILENT_FRAME * round(value / 0.024)
@@ -360,6 +373,11 @@ def main():
     segs = build_segments(genres, today)
     log(f"音声合成中… ({sum(k != 'pause' for k, _, _ in segs)}セグメント)")
     chunks = asyncio.run(synth_all(segs, config["voice"], config.get("rate", "+0%")))
+    spoken = sum(k != "pause" for k, _, _ in segs)
+    if len(FAILED) > max(2, spoken * 0.1):
+        # ほぼ無音のニュースを公開しないよう、ここで止める（前回公開した分がそのまま残る）
+        log(f"音声を作れなかった文が多すぎるため中止します（{len(FAILED)}/{spoken}）")
+        sys.exit(1)
 
     # MP3フレームはそのまま連結でき、各セグメントの開始秒はバイト数から計算できる
     offset = 0
